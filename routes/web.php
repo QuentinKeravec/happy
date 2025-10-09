@@ -20,6 +20,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/', HabitsIndex::class)->name('habits.index');
+Route::middleware('auth')->group(function () {
+    Route::get('/', HabitsIndex::class)->name('habits.index');
+});
 
 require __DIR__.'/auth.php';

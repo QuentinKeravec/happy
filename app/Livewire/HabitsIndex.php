@@ -13,9 +13,11 @@ class HabitsIndex extends Component
 {
     // UI state
     public string $name = '';
-    public string $type = 'positive'; // positive | stop
+    public string $type = 'good_habit'; // good_habit | bad_habit
+    public ?float $amount_per_day = null;
     public string $scope = 'active';  // active | archived | all
     public string $q = '';            // recherche (optionnel)
+    public string $sort = 'recent'; // recent | name | streak | best
 
     public string $started_at = '';
 
@@ -40,7 +42,7 @@ class HabitsIndex extends Component
     {
         $this->validate([
             'name' => 'required|string|min:2|max:100',
-            'type' => 'in:positive,stop',
+            'type' => 'in:good_habit,bad_habit',
             'started_at' => 'required|date|before_or_equal:today',
         ]);
 
@@ -49,6 +51,7 @@ class HabitsIndex extends Component
             'name'      => $this->name,
             'type'      => $this->type,
             'is_active' => true,
+            'amount_per_day' => $this->amount_per_day,
         ]);
 
         // démarrer directement une période en cours
@@ -56,7 +59,7 @@ class HabitsIndex extends Component
 
         // reset propre
         $this->reset(['name', 'type']);
-        $this->type = 'positive';
+        $this->type = 'good_habit';
         $this->started_at = Carbon::today()->toDateString();
         $this->resetValidation();
         $this->formKey++;
@@ -94,18 +97,46 @@ class HabitsIndex extends Component
     {
         $habit = Habit::where('id',$habitId)->where('user_id',Auth::id())->firstOrFail();
         $habit->delete(); // cascade supprime les périodes
+
+        $this->dispatch('toast', message: 'Habitude supprimée !', type: 'error');
     }
 
     public function setScope(string $scope): void { $this->scope = $scope; }
 
+
     public function render()
     {
         $query = Habit::with('periods')->where('user_id', Auth::id());
-        if ($this->scope === 'active')   $query->where('is_active', true);
-        if ($this->scope === 'archived') $query->where('is_active', false);
-        if (trim($this->q) !== '')       $query->where('name', 'like', '%'.trim($this->q).'%');
 
-        $habits = $query->orderByDesc('is_active')->get();
+        // Filtres
+        if ($this->scope !== 'all') {
+            $query->where('is_active', $this->scope === 'active');
+        }
+        if (trim($this->q) !== '') {
+            $q = trim($this->q);
+            $query->where('name', 'like', "%{$q}%");
+        }
+
+        // Tri SQL quand possible
+        if ($this->sort === 'name') {
+            $query->orderBy('name');
+        } elseif ($this->sort === 'recent') {
+            $query->orderByDesc('created_at');
+        }
+
+        $habits = $query->get();
+
+        // Tri collection pour valeurs calculées
+        if ($this->sort === 'streak') {
+            $habits = $habits->sortByDesc(fn($h) => $h->currentStreakDays())->values();
+        } elseif ($this->sort === 'best') {
+            $habits = $habits->sortByDesc(fn($h) => $h->bestStreakDays())->values();
+        }
+
+        // Si tu veux garder "Actives d'abord" quand scope=all
+        if ($this->scope === 'all') {
+            $habits = $habits->sortByDesc('is_active')->values();
+        }
 
         // données du calendrier (si ouvert)
         $calendar = null;
@@ -114,11 +145,27 @@ class HabitsIndex extends Component
                   ?? Habit::with('periods')->find($this->calendarHabitId);
 
             if ($habit) {
-                $month   = Carbon::parse($this->calendarMonth);
+                $locale = app()->getLocale();              // 'ja', 'en', ...
+                $month  = Carbon::parse($this->calendarMonth)->locale($locale);
                 $start   = $month->copy()->startOfMonth();
                 $end     = $month->copy()->endOfMonth();
                 $days    = [];
                 $cursor  = $start->copy();
+
+                $weekStart = match ($locale) {
+                    'fr' => 1,        // Lundi
+                    default => 0,     // Dimanche (en, ja, etc.)
+                };
+
+                $fmt = new \IntlDateFormatter($locale, \IntlDateFormatter::FULL, \IntlDateFormatter::NONE, null, null, 'EEE');
+                $weekdayLabels = [];
+                for ($i = 0; $i < 7; $i++) {
+                    // jour i à partir du weekStart : 0=dim ... 6=sam pour Carbon
+                    $dow = ($weekStart + $i) % 7;
+                    $date = (new \DateTimeImmutable('2025-01-05')) // dimanche
+                        ->modify("+{$dow} day");
+                    $weekdayLabels[] = $fmt->format($date); // ex: ['Sun','Mon',...] ou ['日','月',...]
+                }
 
                 // Pré-calc des segments actifs intersectant le mois
                 $segments = $habit->periods->map(function($p) use ($start,$end){
@@ -131,27 +178,41 @@ class HabitsIndex extends Component
                     ];
                 })->filter();
 
+                // 2) Jours d’arrêt (ended_at dans le mois courant)
+                $stopDates = $habit->periods
+                    ->filter(fn($p) => !is_null($p->ended_at))
+                    ->map(fn($p) => $p->ended_at->toDateString())
+                    ->filter(fn($d) => $d >= $start->toDateString() && $d <= $end->toDateString())
+                    ->values();
+
                 while ($cursor->lte($end)) {
                     $dateStr = $cursor->toDateString();
                     $active = $segments->first(function($seg) use ($dateStr){
                         return $dateStr >= $seg['from'] && $dateStr <= $seg['to'];
                     }) ? true : false;
 
+                     $isStop = $stopDates->contains($dateStr);
+
                     $days[] = [
                         'date' => $dateStr,
                         'day'  => $cursor->day,
                         'active' => $active,
+                        'isStop' => $isStop,
                         'isToday' => $cursor->isToday(),
                     ];
                     $cursor->addDay();
                 }
 
-                // 1er jour de la semaine (Lundi = 1) pour décaler la grille
-                $lead = $start->isoWeekday() - 1; // 0..6
+                $start = $month->copy()->startOfMonth();
+
+                $lead = ($start->dayOfWeek - $weekStart + 7) % 7;
+
+                $monthLabel = $month->isoFormat('MMMM YYYY'); // respecte $locale
 
                 $calendar = [
                     'habit'   => $habit,
-                    'monthLabel' => $month->isoFormat('MMMM YYYY'),
+                    'monthLabel'    => $monthLabel,
+                    'weekdayLabels' => $weekdayLabels,
                     'days'    => $days,
                     'lead'    => $lead,
                     'canPrev' => $start->gt($habit->periods->min('started_at')->copy()->startOfMonth()),

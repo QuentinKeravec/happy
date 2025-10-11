@@ -9,7 +9,7 @@ use App\Models\HabitPeriod;
 
 class Habit extends Model
 {
-    protected $fillable = ['user_id','name','type','is_active'];
+    protected $fillable = ['user_id','name','type','is_active', 'amount_per_day'];
 
     public function periods(): HasMany {
         return $this->hasMany(HabitPeriod::class)->orderBy('started_at');
@@ -52,5 +52,20 @@ class Habit extends Model
         // garde ended_at >= started_at
         if ($closeDate < $open->started_at->toDateString()) $closeDate = $open->started_at->toDateString();
         return $open->update(['ended_at' => $closeDate]);
+    }
+
+    public function lastPeriod(): ?HabitPeriod
+    {
+        // si periods déjà chargé, utilise la collection; sinon, requête
+        if ($this->relationLoaded('periods')) {
+            return $this->periods->sortByDesc('started_at')->first();
+        }
+        return $this->periods()->orderByDesc('started_at')->first();
+    }
+
+    public function isStopped(): bool
+    {
+        $last = $this->lastPeriod();
+        return $last ? !is_null($last->ended_at) : true; // aucun historique = considéré "à l'arrêt"
     }
 }

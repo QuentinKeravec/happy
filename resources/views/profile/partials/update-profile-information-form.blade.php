@@ -47,6 +47,21 @@
             @endif
         </div>
 
+      　<div class="form-control">
+        <label class="label">
+          <span class="label-text">テーマ</span>
+        </label>
+        <select name="theme" class="select select-bordered w-60">
+          @php
+            $themes = ['light','dark','retro','valentine'];
+          @endphp
+          @foreach($themes as $t)
+            <option value="{{ $t }}" @selected(old('theme', auth()->user()->theme) === $t)>{{ $t }}</option>
+          @endforeach
+        </select>
+        @error('theme') <div class="text-error text-sm mt-1">{{ $message }}</div> @enderror
+      　</div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

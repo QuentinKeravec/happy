@@ -13,7 +13,7 @@ return [
     'habit_example'      => '七万歩数／タバコをやめること',
     'type_label'      => '種類',
     'cost_label'    => '1日あたりの金額',
-    'cost_example'    => '200円',
+    'cost_example'    => '￥200',
     'date_label'    => '開始日',
     'calendar'  => 'カレンダー',
     'monday' => '月',

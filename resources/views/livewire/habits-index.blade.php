@@ -28,8 +28,8 @@
       {{-- Header --}}
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-gray-950">{{ __('messages.title') }}</h1>
-          <p class="opacity-70 text-sm text-gray-950">{{ __('messages.header') }}</p>
+          <h1 class="text-2xl font-bold">{{ __('messages.title') }}</h1>
+          <p class="opacity-70 text-sm">{{ __('messages.header') }}</p>
         </div>
 
         {{-- Formulaire création --}}
@@ -38,44 +38,44 @@
               class="flex gap-3 items-end">
 
           <div>
-            <label class="block text-sm text-gray-950">{{ __('messages.habit_label') }}</label>
+            <label class="block text-sm">{{ __('messages.habit_label') }}</label>
             <input
               wire:key="name-input-{{ $formKey }}"
               wire:model.live="name"
               autocomplete="off"
               type="text"
-              class="input input-bordered w-64 bg-sky-50 border-gray-600 text-gray-950"
+              class="input input-bordered w-64"
               placeholder="{{ __('messages.habit_example') }}">
             @error('name')<p class="text-red-600 text-xs">{{ $message }}</p>@enderror
           </div>
 
           <div>
-            <label class="block text-sm text-gray-950">{{ __('messages.type_label') }}</label>
+            <label class="block text-sm">{{ __('messages.type_label') }}</label>
             <select
               wire:key="type-select-{{ $formKey }}"
               wire:model.live="type"
-              class="select select-bordered bg-sky-50 border-gray-600 text-gray-950">
+              class="select select-bordered">
               <option value="good_habit">{{ __('messages.good_habit') }}</option>
               <option value="bad_habit">{{ __('messages.bad_habit') }}</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm text-gray-950">{{ __('messages.cost_label') }}</label>
+            <label class="block text-sm">{{ __('messages.cost_label') }}</label>
             <input type="number" step="100" min="0"
                  wire:key="name-input-{{ $formKey }}"
                  wire:model="amount_per_day"
-                 class="input input-bordered w-32 bg-sky-50 border-gray-600 text-gray-950"
+                 class="input input-bordered w-32"
                  placeholder="{{ __('messages.cost_example') }}">
           </div>
 
           <div>
-            <label class="block text-sm text-gray-950">{{ __('messages.date_label') }}</label>
+            <label class="block text-sm">{{ __('messages.date_label') }}</label>
             <input type="date"
                    wire:key="date-input-{{ $formKey }}"
                    wire:model.live="started_at"
                    max="{{ now()->toDateString() }}"
-                   class="input input-bordered bg-sky-50 border-gray-600 text-gray-950">
+                   class="input input-bordered">
             @error('started_at')<p class="text-red-600 text-xs">{{ $message }}</p>@enderror
           </div>
 
@@ -147,7 +147,7 @@
         </details>
 
           {{-- Recherche --}}
-          <label class="input input-bordered flex items-center gap-2 bg-sky-50 border-gray-600 text-gray-950">
+          <label class="input input-bordered flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-70" viewBox="0 0 24 24" fill="currentColor"><path d="M..." /></svg>
             <input type="text" class="grow" placeholder="{{ __('messages.search') }}" wire:model.live="q">
           </label>
@@ -259,7 +259,7 @@
     <div class="modal modal-open">
       <div class="modal-box max-w-3xl bg-sky-50">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="font-bold text-lg text-gray-950">
+          <h3 class="font-bold text-lg">
             {{ $calendar['habit']->name }} — {{ ucfirst($calendar['monthLabel']) }}
           </h3>
           <div class="flex gap-2">
@@ -269,7 +269,7 @@
         </div>
 
         {{-- Légende --}}
-        <div class="flex items-center gap-3 mb-3 text-sm text-gray-950">
+        <div class="flex items-center gap-3 mb-3 text-sm">
           <span class="inline-block w-4 h-4 rounded bg-success"></span> Succès
           <span class="inline-block w-4 h-4 rounded bg-error"></span> Non tenu
           <span class="ml-auto badge {{ $badge }}">{{ __("messages.{$calendar['habit']->type}") }}</span>

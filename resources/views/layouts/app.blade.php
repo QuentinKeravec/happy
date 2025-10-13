@@ -37,5 +37,24 @@
             </main>
         </div>
         @livewireScripts
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
+        <script>
+          window.initDatepicker = (el, value, locale, onChange) => {
+            const loc = locale === 'ja' ? flatpickr.l10ns.ja
+                     : locale === 'fr' ? flatpickr.l10ns.fr
+                     : flatpickr.l10ns.default;
+            const fp = flatpickr(el, {
+              dateFormat: 'Y-m-d',
+              defaultDate: value || null,
+              locale: loc,
+              allowInput: true,
+              onChange: onChange || (()=>{}),
+            });
+            return fp;
+          };
+        </script>
     </body>
 </html>

@@ -5,6 +5,9 @@ use App\Livewire\HabitsIndex;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Fluent;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Redirect;
 
 /*Route::get('/', function () {
     return view('welcome');
@@ -23,5 +26,18 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/', HabitsIndex::class)->name('habits.index');
 });
+
+Route::get('/lang/{locale}', function (string $locale) {
+    abort_unless(in_array($locale, ['en','ja','fr']), 400);
+    Session::put('locale', $locale);   // stocke dans la session
+    // ne pas App::setLocale ici, le middleware s’en charge pour la requête suivante
+    return Redirect::back();
+})->name('lang.switch');
+
+Route::get('/debug-lang', fn() => [
+    'session_locale' => session('locale'),
+    'app_locale'     => app()->getLocale(),
+    'config_locale'  => config('app.locale'),
+]);
 
 require __DIR__.'/auth.php';

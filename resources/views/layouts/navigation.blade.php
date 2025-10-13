@@ -50,6 +50,16 @@
                         </form>
                     </x-slot>
                 </x-dropdown>
+
+                <div class="dropdown dropdown-end">
+                  <div tabindex="0" role="button" class="btn btn-ghost">
+                    🌐 {{ strtoupper(app()->getLocale()) }}
+                  </div>
+                  <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-32">
+                    <li><a href="{{ route('lang.switch', 'en') }}">🇺🇸 English</a></li>
+                    <li><a href="{{ route('lang.switch', 'ja') }}">🇯🇵 日本語</a></li>
+                  </ul>
+                </div>
             </div>
 
             <!-- Hamburger -->

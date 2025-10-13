@@ -221,7 +221,17 @@ class HabitsIndex extends Component
             }
         }
 
-        return view('livewire.habits-index', compact('habits','calendar'));
+        $activeCount = $habits->where('is_active', true)->count();
+
+        $totalSavedRaw = $habits->sum(function ($h) {
+            $per = $h->amount_per_day ?? 0;
+            return $per * $h->currentStreakDays();
+        });
+
+        $bestRecordDays = $habits->map(fn($h) => $h->bestStreakDays())->max() ?? 0;
+
+
+        return view('livewire.habits-index', compact('habits','calendar', 'activeCount', 'totalSavedRaw', 'bestRecordDays'));
     }
 
     public function openCalendar(int $habitId): void

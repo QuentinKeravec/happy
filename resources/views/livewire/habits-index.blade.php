@@ -39,14 +39,16 @@
 
           <div>
             <label class="block text-sm">{{ __('messages.habit_label') }}</label>
-            <input
-              wire:key="name-input-{{ $formKey }}"
-              wire:model.live="name"
-              autocomplete="off"
-              type="text"
-              class="input input-bordered w-64"
-              placeholder="{{ __('messages.habit_example') }}">
-            @error('name')<p class="text-red-600 text-xs">{{ $message }}</p>@enderror
+            <div class="indicator">
+                <span class="indicator-item badge badge-primary">*</span>
+                <input
+                  wire:key="name-input-{{ $formKey }}"
+                  wire:model.live="name"
+                  autocomplete="off"
+                  type="text"
+                  class="input input-bordered w-64 @error('name') input-error @enderror"
+                  placeholder="{{ __('messages.habit_example') }}">
+            </div>
           </div>
 
           <div>
@@ -54,7 +56,7 @@
             <select
               wire:key="type-select-{{ $formKey }}"
               wire:model.live="type"
-              class="select select-bordered">
+              class="select select-bordered w-24">
               <option value="good_habit">{{ __('messages.good_habit') }}</option>
               <option value="bad_habit">{{ __('messages.bad_habit') }}</option>
             </select>
@@ -65,18 +67,52 @@
             <input type="number" step="100" min="0"
                  wire:key="name-input-{{ $formKey }}"
                  wire:model="amount_per_day"
-                 class="input input-bordered w-32"
+                 class="input input-bordered w-28"
                  placeholder="{{ __('messages.cost_example') }}">
           </div>
 
-          <div>
-            <label class="block text-sm">{{ __('messages.date_label') }}</label>
-            <input type="date"
-                   wire:key="date-input-{{ $formKey }}"
-                   wire:model.live="started_at"
-                   max="{{ now()->toDateString() }}"
-                   class="input input-bordered">
-            @error('started_at')<p class="text-red-600 text-xs">{{ $message }}</p>@enderror
+          <div x-data="{ fp: null }"
+             x-init="
+               fp = window.initDatepicker(
+                 $refs.dp,
+                 @js($started_at),
+                 '{{ app()->getLocale() }}',
+                 (sel) => $wire.set('started_at', sel[0] ? fp.formatDate(sel[0],'Y-m-d') : null)
+               );
+               // resync si Livewire modifie la valeur
+               $watch('$wire.started_at', v => { if (v) fp.setDate(v, true) });
+             ">
+            <label class="block text-sm mb-1">{{ __('messages.date_label') }}</label>
+            <div class="indicator">
+                <span class="indicator-item badge badge-primary">*</span>
+                <input x-ref="dp" type="text"
+                     class="input input-bordered w-36 @error('name') input-error @enderror"
+                     wire:key="name-input-{{ $formKey }}"
+                     wire:model.live="started_at"
+                     placeholder="YYYY-MM-DD">
+            </div>
+          </div>
+
+          <div x-data="{ fp: null }"
+             x-init="
+               fp = window.initDatepicker(
+                 $refs.dp,
+                 @js($started_at),
+                 '{{ app()->getLocale() }}',
+                 (sel) => $wire.set('started_at', sel[0] ? fp.formatDate(sel[0],'Y-m-d') : null)
+               );
+               // resync si Livewire modifie la valeur
+               $watch('$wire.started_at', v => { if (v) fp.setDate(v, true) });
+             ">
+            <label class="block text-sm mb-1">{{ __('messages.end_date') }}</label>
+            <div class="indicator">
+                <span class="indicator-item badge badge-primary">*</span>
+                <input x-ref="dp" type="text"
+                     class="input input-bordered w-36 @error('name') input-error @enderror"
+                     wire:key="name-input-{{ $formKey }}"
+                     wire:model.live="started_at"
+                     placeholder="YYYY-MM-DD">
+            </div>
           </div>
 
           <button class="btn btn-success">{{ __('messages.add') }}</button>
@@ -153,6 +189,33 @@
           </label>
       </div>
 
+      @php
+        $locale    = app()->getLocale();
+        $currency  = $locale === 'ja' ? 'JPY' : 'EUR';
+        $precision = $currency === 'JPY' ? 0 : 2;
+        $totalSaved = \Illuminate\Support\Number::currency($totalSavedRaw, $currency, $locale, $precision);
+      @endphp
+
+      <div class="stats stats-vertical lg:stats-horizontal shadow w-full bg-base-100 mb-4">
+        <div class="stat">
+          <div class="stat-title">{{ __('messages.money_saved') }}</div>
+          <div class="stat-value">{{ $totalSaved }}</div>
+          <div class="stat-desc">{{ __('messages.since_start') }}</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-title">{{ __('messages.active_habits') }}</div>
+          <div class="stat-value">{{ $activeCount }} {{ __('messages.counter') }}</div>
+          <div class="stat-desc">{{ __('messages.running_now') }}</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-title">{{ __('messages.best_streak') }}</div>
+          <div class="stat-value">{{ $bestRecordDays }} {{ __('messages.day') }}</div>
+          <div class="stat-desc">{{ __('messages.personal_record') }}</div>
+        </div>
+      </div>
+
       {{-- Spinner de chargement DaisyUI --}}
       <div class="flex justify-center my-4" wire:loading.flex wire:target="q,sort,scope">
         <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -167,7 +230,7 @@
             $badge  = $h->type === 'good_habit' ? 'badge-success' : 'badge-error';
           @endphp
 
-        <div class="card {{ $h->isStopped() ? 'bg-rose-600' : 'bg-emerald-600' }} shadow hover:shadow-lg transition"
+        <div class="card {{ $h->isStopped() ? 'bg-rose-600' : 'bg-emerald-600' }} shadow-md shadow-zinc-600 hover:shadow-lg hover:shadow-zinc-600  transition"
              wire:key="habit-card-{{ $h->id }}">
           <div class="card-body p-4 sm:p-6 flex flex-col justify-between h-full">
 

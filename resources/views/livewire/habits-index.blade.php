@@ -28,8 +28,7 @@
       {{-- Header --}}
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold">{{ __('messages.title') }}</h1>
-          <p class="opacity-70 text-sm">{{ __('messages.header') }}</p>
+          <p class="opacity-70 text-sm font-bold">{{ __('messages.header') }}</p>
         </div>
 
         {{-- Formulaire création --}}
@@ -93,28 +92,6 @@
             </div>
           </div>
 
-          <div x-data="{ fp: null }"
-             x-init="
-               fp = window.initDatepicker(
-                 $refs.dp,
-                 @js($started_at),
-                 '{{ app()->getLocale() }}',
-                 (sel) => $wire.set('started_at', sel[0] ? fp.formatDate(sel[0],'Y-m-d') : null)
-               );
-               // resync si Livewire modifie la valeur
-               $watch('$wire.started_at', v => { if (v) fp.setDate(v, true) });
-             ">
-            <label class="block text-sm mb-1">{{ __('messages.end_date') }}</label>
-            <div class="indicator">
-                <span class="indicator-item badge badge-primary">*</span>
-                <input x-ref="dp" type="text"
-                     class="input input-bordered w-36 @error('name') input-error @enderror"
-                     wire:key="name-input-{{ $formKey }}"
-                     wire:model.live="started_at"
-                     placeholder="YYYY-MM-DD">
-            </div>
-          </div>
-
           <button class="btn btn-success">{{ __('messages.add') }}</button>
         </form>
       </div>
@@ -123,20 +100,20 @@
           {{-- Filtres état --}}
           <div role="tablist" class="tabs tabs-boxed">
             <button type="button" class="tab {{ $scope==='active' ? 'tab-active' : '' }}"
-                    wire:click="setScope('active')">Actives</button>
+                    wire:click="setScope('active')">{{ __('messages.active') }}</button>
             <button type="button" class="tab {{ $scope==='archived' ? 'tab-active' : '' }}"
-                    wire:click="setScope('archived')">Archivées</button>
+                    wire:click="setScope('archived')">{{ __('messages.archived') }}</button>
             <button type="button" class="tab {{ $scope==='all' ? 'tab-active' : '' }}"
-                    wire:click="setScope('all')">Toutes</button>
+                    wire:click="setScope('all')">{{ __('messages.all') }}</button>
           </div>
 
         {{-- Tri --}}
         @php
           $labels = [
-            'recent' => 'Plus récent',
-            'name'   => 'Nom (A→Z)',
-            'streak' => 'Streak actuelle',
-            'best'   => 'Meilleur record',
+            'recent' => __('messages.most_recent'),
+            'name'   => __('messages.alphabetic_order'),
+            'streak' => __('messages.actual_streak'),
+            'best'   => __('messages.best_record'),
           ];
         @endphp
 
@@ -151,7 +128,7 @@
               <button type="button"
                       class="{{ $sort==='recent' ? 'active font-semibold' : '' }}"
                       wire:click="$set('sort','recent')">
-                Plus récent
+                {{ __('messages.most_recent') }}
                 @if($sort==='recent') <span class="badge badge-primary">✓</span> @endif
               </button>
             </li>
@@ -159,7 +136,7 @@
               <button type="button"
                       class="{{ $sort==='name' ? 'active font-semibold' : '' }}"
                       wire:click="$set('sort','name')">
-                Nom (A→Z)
+                {{ __('messages.alphabetic_order') }}
                 @if($sort==='name') <span class="badge badge-primary">✓</span> @endif
               </button>
             </li>
@@ -167,7 +144,7 @@
               <button type="button"
                       class="{{ $sort==='streak' ? 'active font-semibold' : '' }}"
                       wire:click="$set('sort','streak')">
-                Streak actuelle
+                {{ __('messages.actual_streak') }}
                 @if($sort==='streak') <span class="badge badge-primary">✓</span> @endif
               </button>
             </li>
@@ -175,7 +152,7 @@
               <button type="button"
                       class="{{ $sort==='best' ? 'active font-semibold' : '' }}"
                       wire:click="$set('sort','best')">
-                Meilleur record
+                {{ __('messages.best_streak') }}
                 @if($sort==='best') <span class="badge badge-primary">✓</span> @endif
               </button>
             </li>
@@ -211,7 +188,7 @@
 
         <div class="stat">
           <div class="stat-title">{{ __('messages.best_streak') }}</div>
-          <div class="stat-value">{{ $bestRecordDays }} {{ __('messages.day') }}</div>
+          <div class="stat-value">{{ $bestRecordDays }} {{ __('messages.days') }}</div>
           <div class="stat-desc">{{ __('messages.personal_record') }}</div>
         </div>
       </div>
@@ -232,13 +209,21 @@
 
         <div class="card {{ $h->isStopped() ? 'bg-rose-600' : 'bg-emerald-600' }} shadow-md shadow-zinc-600 hover:shadow-lg hover:shadow-zinc-600  transition"
              wire:key="habit-card-{{ $h->id }}">
-          <div class="card-body p-4 sm:p-6 flex flex-col justify-between h-full">
 
-            {{-- HEADER : empilé en mobile, côte à côte en ≥ sm --}}
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              {{-- Bloc titre + montants + streak (prend la largeur) --}}
+          {{-- Croix de suppression, petite, coin haut-droit --}}
+          <button
+            type="button"
+            class="btn btn-circle btn-ghost btn-xs absolute top-2 right-2 z-10 text-base-200 hover:text-white hover:bg-black/20"
+            wire:click="deleteHabit({{ $h->id }})"
+            title="{{ __('messages.delete') }}"
+          >
+            ✕
+          </button>
+
+          <div class="card-body p-4 sm:p-6 flex flex-col justify-between h-full">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between relative pr-6">
               <div class="min-w-0 space-y-1">
-                <h3 class="card-title text-base sm:text-lg font-semibold truncate break-words">
+                <h3 class="card-title text-base sm:text-lg font-semibold truncate">
                   {{ $h->name }}
                 </h3>
 
@@ -253,58 +238,38 @@
                 @endphp
 
                 @if($h->amount_per_day)
-                  <p class="text-sm sm:text-base/6 opacity-90">
-                    💰 {{ $total }} · {{ $perDay }} / {{ __('messages.day') }}
-                  </p>
+                  <p class="text-sm opacity-90">💰 {{ $total }} · {{ $perDay }} / {{ __('messages.day') }}</p>
                 @endif
 
-                <p class="text-sm sm:text-base/6 opacity-90">
-                  🔥 <b>{{ $streak }}</b> {{ __('messages.day') }} — 🏆 {{ $best }} {{ __('messages.day') }}
-                </p>
+                <p class="text-sm opacity-90">🔥 <b>{{ $h->currentStreakDays() }}</b> {{ __('messages.day') }} — 🏆 {{ $h->bestStreakDays() }} {{ __('messages.day') }}</p>
               </div>
 
-              <span class="badge {{ $badge }} capitalize shrink-0 self-start sm:self-auto">
+              <span class="badge {{ $h->type === 'good_habit' ? 'badge-success' : 'badge-error' }} capitalize shrink-0">
                 {{ __("messages.{$h->type}") }}
               </span>
             </div>
 
-            <div class="mt-4 flex flex-wrap items-center gap-2">
-              {{-- Start/Stop à gauche en mobile, à droite en ≥ sm --}}
-              <div class="order-1 sm:order-2 sm:ml-auto">
-                @if($h->currentPeriod())
-                  <button type="button" class="btn btn-warning btn-sm" wire:click="stopHabit({{ $h->id }})">
-                    {{ __('messages.stop_') }}
-                  </button>
+            <div class="mt-4 flex items-center gap-2 flex-wrap justify-between">
+              <div class="flex flex-wrap gap-2">
+                @if($h->is_active)
+                  <button type="button" class="btn btn-outline btn-sm" wire:click="archiveHabit({{ $h->id }})">{{ __('messages.archive') }}</button>
                 @else
-                  <button type="button" class="btn btn-success btn-sm" wire:click="startHabit({{ $h->id }})">
-                    {{ __('messages.restart') }}
-                  </button>
+                  <button type="button" class="btn btn-outline btn-sm" wire:click="restoreHabit({{ $h->id }})">{{ __('messages.restore') }}</button>
                 @endif
+                <button type="button" class="btn btn-outline btn-sm" wire:click="openCalendar({{ $h->id }})">{{ __('messages.calendar') }}</button>
               </div>
 
-              <div class="order-2 sm:order-1 flex flex-wrap gap-2">
-                @if($h->is_active)
-                  <button type="button" class="btn btn-outline btn-sm" wire:click="archiveHabit({{ $h->id }})">
-                    {{ __('messages.archive') }}
-                  </button>
+              <div>
+                @if($h->currentPeriod())
+                  <button type="button" class="btn btn-warning btn-sm" wire:click="stopHabit({{ $h->id }})">{{ __('messages.stop_') }}</button>
                 @else
-                  <button type="button" class="btn btn-outline btn-sm" wire:click="restoreHabit({{ $h->id }})">
-                    {{ __('messages.restore') }}
-                  </button>
+                  <button type="button" class="btn btn-success btn-sm" wire:click="startHabit({{ $h->id }})">{{ __('messages.restart') }}</button>
                 @endif
-
-                <button type="button" class="btn btn-outline btn-sm" wire:click="openCalendar({{ $h->id }})">
-                  {{ __('messages.calendar') }}
-                </button>
-
-                <button type="button" class="btn btn-ghost btn-sm" wire:click="deleteHabit({{ $h->id }})">
-                  {{ __('messages.delete') }}
-                </button>
               </div>
             </div>
-
           </div>
         </div>
+
         @empty
           <div class="col-span-full">
             <div class="alert bg-rose-600 border-rose-500">

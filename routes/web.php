@@ -8,22 +8,12 @@ use Illuminate\Support\Fluent;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
-
-/*Route::get('/', function () {
-    return view('welcome');
-});*/
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+use App\Livewire\Admin\Dashboard;
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-Route::middleware('auth')->group(function () {
     Route::get('/', HabitsIndex::class)->name('habits.index');
 });
 
@@ -32,5 +22,12 @@ Route::get('/lang/{locale}', function (string $locale) {
     Session::put('locale', $locale);   // stocke dans la session
     return Redirect::back();
 })->name('lang.switch');
+
+Route::middleware(['auth', 'is_admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/', Dashboard::class)->name('dashboard');
+});
 
 require __DIR__.'/auth.php';

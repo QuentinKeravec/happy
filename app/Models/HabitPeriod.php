@@ -17,4 +17,9 @@ class HabitPeriod extends Model
         $end   = ($this->ended_at ?? now())->copy()->startOfDay();
         return max(1, $start->diffInDays($end) + 1); // inclure le jour de début
     }
+
+    public function habit()
+    {
+        return $this->belongsTo(\App\Models\Habit::class);
+    }
 }

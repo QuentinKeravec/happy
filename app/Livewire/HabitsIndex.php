@@ -65,7 +65,9 @@ class HabitsIndex extends Component
         $this->formKey++;
         $this->dispatch('$refresh');
 
-        $this->dispatch('toast', message: 'Habitude ajoutée !', type: 'success');
+        $message = __('messages.habit_added');
+
+        $this->dispatch('toast', message: $message, type: 'success');
     }
 
     // Arrêter (clôturer la période en cours)
@@ -98,7 +100,8 @@ class HabitsIndex extends Component
         $habit = Habit::where('id',$habitId)->where('user_id',Auth::id())->firstOrFail();
         $habit->delete(); // cascade supprime les périodes
 
-        $this->dispatch('toast', message: 'Habitude supprimée !', type: 'error');
+        $message = __('messages.habit_deleted');
+        $this->dispatch('toast', message: $message, type: 'error');
     }
 
     public function setScope(string $scope): void { $this->scope = $scope; }
@@ -167,41 +170,76 @@ class HabitsIndex extends Component
                     $weekdayLabels[] = $fmt->format($date); // ex: ['Sun','Mon',...] ou ['日','月',...]
                 }
 
-                // Pré-calc des segments actifs intersectant le mois
-                $segments = $habit->periods->map(function($p) use ($start,$end){
-                    $s = $p->started_at->copy();
-                    $e = ($p->ended_at ?? Carbon::today())->copy();
-                    if ($e->lt($start) || $s->gt($end)) return null; // pas d'intersection
-                    return [
-                        'from' => $s->max($start)->toDateString(),
-                        'to'   => $e->min($end)->toDateString(),
+                $monthStart = $start->copy();
+                $monthEnd   = $end->copy();
+                $today = Carbon::today();
+
+                // 1) Prépare une map de tous les jours du mois
+                $days = [];
+                for ($d = $monthStart->copy(); $d->lte($monthEnd); $d->addDay()) {
+                    $key = $d->toDateString();
+                    $days[$key] = [
+                        'date'    => $key,
+                        'day'     => $d->day,
+                        'active'  => false,
+                        'isStop'  => false,
+                        'isToday' => $d->isToday(),
                     ];
-                })->filter();
-
-                // 2) Jours d’arrêt (ended_at dans le mois courant)
-                $stopDates = $habit->periods
-                    ->filter(fn($p) => !is_null($p->ended_at))
-                    ->map(fn($p) => $p->ended_at->toDateString())
-                    ->filter(fn($d) => $d >= $start->toDateString() && $d <= $end->toDateString())
-                    ->values();
-
-                while ($cursor->lte($end)) {
-                    $dateStr = $cursor->toDateString();
-                    $active = $segments->first(function($seg) use ($dateStr){
-                        return $dateStr >= $seg['from'] && $dateStr <= $seg['to'];
-                    }) ? true : false;
-
-                     $isStop = $stopDates->contains($dateStr);
-
-                    $days[] = [
-                        'date' => $dateStr,
-                        'day'  => $cursor->day,
-                        'active' => $active,
-                        'isStop' => $isStop,
-                        'isToday' => $cursor->isToday(),
-                    ];
-                    $cursor->addDay();
                 }
+
+                // 2) Trie les périodes
+                $periods = $habit->periods->sortBy('started_at')->values();
+
+                // 3) Marque les jours ACTIFS (vert)
+                foreach ($periods as $p) {
+                    $pStart = $p->started_at->copy()->startOfDay();
+                    $pEnd   = ($p->ended_at ?? $today)->copy()->startOfDay();
+
+                    // clip aux bornes du mois
+                    $from = $pStart->max($monthStart);
+                    $to   = $pEnd->min($monthEnd);
+
+                    for ($d = $from->copy(); $d->lte($to); $d->addDay()) {
+                        $key = $d->toDateString();
+                        if (isset($days[$key])) {
+                            $days[$key]['active'] = true; // priorité au vert
+                        }
+                    }
+                }
+
+                // 4) Marque les jours d’ARRÊT (rouge) entre les périodes fermées
+                for ($i = 0; $i < $periods->count(); $i++) {
+                    /** @var \App\Models\HabitPeriod $cur */
+                    $cur = $periods[$i];
+
+                    // si la période est encore ouverte => pas d'intervalle d'arrêt derrière
+                    if (is_null($cur->ended_at)) {
+                        continue;
+                    }
+
+                    $curEnd = $cur->ended_at->copy()->startOfDay(); // inclus
+                    // borne haute = veille du prochain start SI prochain existe, SINON aujourd'hui
+                    $nextStartMinus1 = $periods->get($i + 1)?->started_at
+                        ? $periods[$i + 1]->started_at->copy()->startOfDay()->subDay()
+                        : $today;
+
+                    // clip aux bornes du mois
+                    $from = $curEnd->max($monthStart);
+                    $to   = $nextStartMinus1->min($monthEnd);
+
+                    if ($from->lte($to)) {
+                        for ($d = $from->copy(); $d->lte($to); $d->addDay()) {
+                            $key = $d->toDateString();
+                            // ne colorie en rouge que si NON actif
+                            if (isset($days[$key]) && $days[$key]['active'] === false) {
+                                $days[$key]['isStop'] = true;
+                            }
+                        }
+                    }
+                }
+
+                // 5) Transforme en liste pour la vue
+                $days = array_values($days);
 
                 $start = $month->copy()->startOfMonth();
 

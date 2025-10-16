@@ -68,4 +68,9 @@ class Habit extends Model
         $last = $this->lastPeriod();
         return $last ? !is_null($last->ended_at) : true; // aucun historique = considéré "à l'arrêt"
     }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
 }

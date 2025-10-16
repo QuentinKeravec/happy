@@ -30,7 +30,7 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $extra = $request->validate([
-            'theme' => ['nullable','string', Rule::in(['light','dark','retro','valentine'])],
+            'theme' => ['nullable','string', Rule::in(['light','dark','retro','valentine','cyberpunk','nord','caramellatte','aqua','coffee'])],
         ]);
 
         $user->fill($request->validated());

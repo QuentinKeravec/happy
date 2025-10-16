@@ -319,7 +319,8 @@
 
           @foreach($calendar['days'] as $d)
             <div class="h-10 rounded grid place-items-center text-sm
-                        {{ $d['isStop'] ? 'bg-error text-error-content' : ($d['active'] ? 'bg-success text-success-content' : 'bg-base-300') }}
+                        {{ $d['active'] ? 'bg-success text-success-content'
+                                        : ($d['isStop'] ? 'bg-error text-error-content' : 'bg-base-300') }}
                         {{ $d['isToday'] ? 'ring-2 ring-primary' : '' }}">
               {{ $d['day'] }}
             </div>

@@ -53,7 +53,7 @@
         </label>
         <select name="theme" class="select select-bordered w-60">
           @php
-            $themes = ['light','dark','retro','valentine'];
+            $themes = ['light','dark','retro','valentine','cyberpunk','nord','caramellatte','aqua','coffee'];
           @endphp
           @foreach($themes as $t)
             <option value="{{ $t }}" @selected(old('theme', auth()->user()->theme) === $t)>{{ $t }}</option>

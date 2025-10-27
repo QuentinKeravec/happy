@@ -59,6 +59,14 @@ UI は **Livewire + DaisyUI** を使っています。
     php artisan migrate
     php artisan db:seed
     ```
+   このアプリには、デモ用のユーザーが自動的に作成されます。  
+   以下のアカウント情報を使ってログインできます。
+     - ✉️ メールアドレス：`demo@example.com`
+     - 🔑 パスワード：`password`
+   
+   このアカウントは「habit（習慣）」のデモデータを含んでおり、  
+      アプリの機能をすぐに試すことができます。
+
 
 6. 管理者ユーザー設定  
    users テーブルに `is_admin` カラムを追加  

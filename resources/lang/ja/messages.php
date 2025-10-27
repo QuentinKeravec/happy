@@ -83,4 +83,6 @@ return [
     'period_deleted'  => '期間を削除しました。',
     'period_added'  => '期間を追加しました。',
     'period_updated'  => '期間を編集しました。',
+    'success'  => '成功',
+    'failed'  => '失敗',
 ];

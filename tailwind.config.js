@@ -9,5 +9,5 @@ module.exports = {
         extend: { fontFamily: { sans: ['Figtree', ...defaultTheme.fontFamily.sans] } },
     },
     plugins: [require('@tailwindcss/forms'), require('daisyui')],
-    daisyui: { themes: ['light','dark','retro','valentine','cyberpunk','nord','caramellatte','aqua','coffee'] },
+    daisyui: { themes: ['valentine','light','dark','retro','cyberpunk','nord','caramellatte','aqua','coffee'] },
 };

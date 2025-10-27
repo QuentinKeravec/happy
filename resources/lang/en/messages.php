@@ -1,7 +1,7 @@
 <?php
 return [
     'title'  => 'Happy',
-    'header'  => 'Manage your habits, get more motivation ！',
+    'header'  => 'Manage your habits, get more motivation !',
     'add' => 'Add',
     'delete' => 'Delete',
     'close'    => 'Close',
@@ -83,4 +83,6 @@ return [
     'period_deleted'  => 'Period deleted.',
     'period_added'  => 'Period added.',
     'period_updated'  => 'Period modified.',
+    'success'  => 'Success',
+    'failed'  => 'Failed',
 ];

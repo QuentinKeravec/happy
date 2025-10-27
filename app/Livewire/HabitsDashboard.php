@@ -28,7 +28,6 @@ class HabitsDashboard extends Component
             'is_active' => true,
         ]);
 
-        // démarre une période immédiatement si tu veux :
         $habit->start();
 
         $this->reset(['name']); $this->type = 'positive';

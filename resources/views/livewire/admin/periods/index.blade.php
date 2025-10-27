@@ -2,7 +2,7 @@
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-semibold">{{ __('messages.periods') }}</h1>
     <div class="flex gap-2">
-      <input type="text" class="input input-bordered input-sm" placeholder="Recherche" wire:model.live.debounce.300ms="q">
+      <input type="text" class="input input-bordered input-sm" placeholder="{{ __('messages.search') }}" wire:model.live.debounce.300ms="q">
       <button class="btn btn-primary btn-sm" wire:click="openCreate">+ {{ __('messages.add') }}</button>
     </div>
   </div>

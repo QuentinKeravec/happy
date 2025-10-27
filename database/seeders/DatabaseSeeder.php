@@ -17,25 +17,31 @@ class DatabaseSeeder extends Seeder
             'name' => 'Demo User',
             'email' => 'demo@example.com',
             'password' => bcrypt('password'), // login de démo
+            'theme' => 'valentine',
         ]);
 
         // Set fixe d'habitudes pour la démo
         $defs = [
-            ['7000 pas', 'positive'],
-            ['Boire 2L d’eau', 'positive'],
-            ['Lire 10 minutes', 'positive'],
-            ['Pompes x20', 'positive'],
-            ['Méditer 5 min', 'positive'],
-            ['Arrêter de fumer', 'stop'],
+            ['七万歩数', 'good_habit'],
+            ['水の2ℓを飲む', 'good_habit'],
+            ['10分読む', 'good_habit'],
+            ['懸垂を10回やる', 'good_habit'],
+            ['タバコを止める', 'bad_habit'],
         ];
 
         foreach ($defs as [$name, $type]) {
-            $habit = Habit::create([
+            $data = [
                 'user_id'   => $user->id,
                 'name'      => $name,
                 'type'      => $type,
                 'is_active' => true,
-            ]);
+            ];
+
+            if ($name === 'タバコを止める') {
+                $data['amount_per_day'] = 600;
+            }
+
+            $habit = Habit::create($data);
 
             // 1 à 2 périodes fermées passées
             $closedCount = rand(1, 2);

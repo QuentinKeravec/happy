@@ -298,8 +298,8 @@
 
         {{-- Légende --}}
         <div class="flex items-center gap-3 mb-3 text-sm">
-          <span class="inline-block w-4 h-4 rounded bg-success"></span> Succès
-          <span class="inline-block w-4 h-4 rounded bg-error"></span> Non tenu
+          <span class="inline-block w-4 h-4 rounded bg-success"></span> {{ __('messages.success') }}
+          <span class="inline-block w-4 h-4 rounded bg-error"></span> {{ __('messages.failed') }}
           <span class="ml-auto badge {{ $badge }}">{{ __("messages.{$calendar['habit']->type}") }}</span>
         </div>
 
